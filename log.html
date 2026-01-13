@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="hr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prijevod rečenice u jezik iskazne logike</title>
+    <link rel="stylesheet" href="log.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Prijevod rečenice u jezik iskazne logike</h1>
+
+        <div class="input-section">
+            <h2>Unesite rečenicu:</h2>
+            <textarea id="unosRecenice" placeholder="Primjer: 'Ako pada kiša onda ću nositi kišobran.'"></textarea>
+        </div>
+
+        <div class="varijable-section">
+            <h2>Definirajte varijable za iskaze:</h2>
+            <div id="kontejnerVarijabli" class="varijable-kontejner">
+            </div>
+            <button id="dodajVarijabluBtn" class="sekundarni-gumb">+ Dodaj novu varijablu</button>
+        </div>
+
+        <div class="gumbovi-kontejner">
+            <button id="parsirajBtn" class="primarni-gumb">Pretvori u logičke simbole</button>
+            <button id="resetirajBtn" class="sekundarni-gumb">Započni ispočetka</button>
+        </div>
+
+        <div class="izlaz-section">
+            <h2>Rezultat:</h2>
+            <div id="izlaz" class="izlaz-kutija">
+                Ovdje će se prikazati logički izraz...
+            </div>
+        </div>
+
+        <div class="legenda">
+            <h3>Logički poveznici i njihovi simboli:</h3>
+            <p><span class="simbol">∧</span> - Konjukcija (i, pa, te, ni, niti, a, ali, nego, no, već, mada, premda,
+                iako)</p>
+            <p><span class="simbol">¬</span> - Negacija (nije slučaj da, ne vrijedi da, nije tako da, ne)</p>
+            <p><span class="simbol">∨</span> - Dijsunkcija (ili, bilo...bilo)</p>
+            <p><span class="simbol">→</span> - Implikacija (ako...onda, budući da, pod pretpostavkom da, u slučaju da)
+            </p>
+            <p><span class="simbol">↔</span> - Ekvivalencija (ako i samo ako)</p>
+        </div>
+    </div>
+<footer>
+            <p>Prijevod rečenice u jezik iskazne logike - Petra J. & Tina D.</p>
+        </footer>
+    <script src="log.js"></script>
+</body>
+
+</html>

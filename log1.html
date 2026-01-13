@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logički Kalkulator</title>
+    <link rel="stylesheet" href="log1.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>LOGIČKI KALKULATOR</h1>
+            <p class="subtitle">Izračunajte vrijednosti iskaznih formula u iskaznoj logici</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="calculator">
+                <div class="input-section">
+                    <div class="variables">
+                        <div class="variable">
+                            <label for="p">Varijabla p</label>
+                            <div class="checkbox-container">
+                                <input type="checkbox" id="p" class="variable-checkbox">
+                                <label for="p" class="checkbox-label" id="p-label">N</label>
+                            </div>
+                        </div>
+                        
+                        <div class="variable">
+                            <label for="q">Varijabla q</label>
+                            <div class="checkbox-container">
+                                <input type="checkbox" id="q" class="variable-checkbox">
+                                <label for="q" class="checkbox-label" id="q-label">N</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="operator-section">
+                        <label for="operator">Odaberite logički operator:</label>
+                        <select id="operator" class="operator-select">
+                            <option value="and">Konjukcija (logičko i) ∧</option>
+                            <option value="or">Disjunkcija (logičko ili) ∨</option>
+                            <option value="implication">Implikacija (ako-onda) →</option>
+                            <option value="equivalence">Ekvivalencija (ako i samo ako) ↔</option>
+                            <option value="xor">Alternacija(Isključivo ili) ⊕</option>
+                           
+                        </select>
+                        
+                        <button id="calculate" class="calculate-btn">Izračunaj rezultat</button>
+                    </div>
+                </div>
+                
+                <div class="result-section">
+                    <div class="result-value" id="result-value">?</div>
+                    <div class="result-text" id="result-text">
+                        Postavite vrijednosti varijabli i operator, zatim kliknite na "Izračunaj rezultat"
+                    </div>
+                </div>
+            </div>
+            
+            <div class="truth-table">
+                <h3>Tablica istinitosti za odabrani operator</h3>
+                <table id="truth-table">
+                    <thead>
+                        <tr>
+                            <th>p</th>
+                            <th>q</th>
+                            <th id="operator-header">p ∧ q</th>
+                        </tr>
+                    </thead>
+                    <tbody id="truth-table-body">
+                        <!-- Tablica će biti popunjena JavaScript-om -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Logički kalkulator - Petra J. & Tina D.</p>
+            <div class="symbol-info">
+                <div class="symbol-item"><strong>∧</strong> - Konjukcija (logičko i)</div>
+                <div class="symbol-item"><strong>∨</strong> - Disjunkcija ( logičko ili)</div>
+                <div class="symbol-item"><strong>→</strong> - Implikacija (ako...onda)</div>
+                <div class="symbol-item"><strong>↔</strong> - Ekvivalencija (ako i samo ako)</div>
+                <div class="symbol-item"><strong>⊕</strong> - Alternacija (isključivo ili)</div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="log1.js"></script>
+</body>
+</html>
