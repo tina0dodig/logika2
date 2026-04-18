@@ -1,113 +1,111 @@
-const logickiVeznici = {
-    konjukcija: {
-        simbol: "∧",
-        rijeci: ["i", "pa", "te", "ni", "niti", "a", "ali", "nego", "no", "već", "mada", "premda", "iako"]
-    },
-    negacija: {
-        simbol: "¬",
-        rijeci: ["nije slučaj da", "ne vrijedi da", "nije tako da", "ne"]
-    },
-    disjunkcija: {
-        simbol: "∨",
-        rijeci: ["ili", "bilo"]
-    },
-    implikacija: {
-        simbol: "→",
-        rijeci: ["ako", "onda", "budući da", "pod pretpostavkom da", "u slučaju da"]
-    },
-    ekvivalencija: {
-        simbol: "↔",
-        rijeci: ["ako i samo ako"]
-    }
-};
-
 let varijable = [];
 
-let unosRecenice, kontejnerVarijabli, dodajVarijabluBtn, parsirajBtn, resetirajBtn, izlaz;
+let unosRecenice;
+let kontejnerVarijabli;
+let dodajVarijabluBtn;
+let parsirajBtn;
+let resetirajBtn;
+let izlaz;
 
 function pokreniAplikaciju() {
-    unosRecenice = document.getElementById('unosRecenice');
-    kontejnerVarijabli = document.getElementById('kontejnerVarijabli');
-    dodajVarijabluBtn = document.getElementById('dodajVarijabluBtn');
-    parsirajBtn = document.getElementById('parsirajBtn');
-    resetirajBtn = document.getElementById('resetirajBtn');
-    izlaz = document.getElementById('izlaz');
+    unosRecenice = document.getElementById("unosRecenice");
+    kontejnerVarijabli = document.getElementById("kontejnerVarijabli");
+    dodajVarijabluBtn = document.getElementById("dodajVarijabluBtn");
+    parsirajBtn = document.getElementById("parsirajBtn");
+    resetirajBtn = document.getElementById("resetirajBtn");
+    izlaz = document.getElementById("izlaz");
 
-    dodajVarijabluBtn.addEventListener('click', dodajVarijablu);
-    parsirajBtn.addEventListener('click', parsirajRecenicu);
-    resetirajBtn.addEventListener('click', resetirajFormu);
+    dodajVarijabluBtn.addEventListener("click", dodajVarijablu);
+    parsirajBtn.addEventListener("click", parsirajRecenicu);
+    resetirajBtn.addEventListener("click", resetirajFormu);
 
     dodajVarijablu();
+}
+
+function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function normalizirajTekst(tekst) {
+    return tekst
+        .replace(/[“”„"]/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
 }
 
 function prikaziVarijable() {
     if (!kontejnerVarijabli) return;
 
-    kontejnerVarijabli.innerHTML = '';
+    kontejnerVarijabli.innerHTML = "";
 
     varijable.forEach((varijabla, indeks) => {
-        const varijablaDiv = document.createElement('div');
-        varijablaDiv.className = 'varijable-input';
+        const div = document.createElement("div");
+        div.className = "varijable-input";
 
-        varijablaDiv.innerHTML = `
-            <label for="simbol${indeks}">Simbol (npr. T, P, K):</label>
-            <input type="text" id="simbol${indeks}" value="${varijabla.simbol}" maxlength="2" 
+        div.innerHTML = `
+            <label for="simbol${indeks}">Simbol:</label>
+            <input type="text" id="simbol${indeks}" value="${varijabla.simbol}" maxlength="1"
                    data-indeks="${indeks}" data-tip="simbol">
             <span class="uputa">Jedno slovo (A-Z)</span>
-            
+
             <label for="iskaz${indeks}" style="margin-top: 8px;">Iskaz:</label>
-            <input type="text" id="iskaz${indeks}" value="${varijabla.iskaz}" 
+            <input type="text" id="iskaz${indeks}" value="${varijabla.iskaz}"
                    data-indeks="${indeks}" data-tip="iskaz" placeholder="npr. pada kiša">
-            <span class="uputa">Unesite iskaz s razmacima između riječi</span>
-            
-            ${indeks > 0 ? `<button type="button" class="opasni-gumb" data-indeks="${indeks}">Ukloni varijablu</button>` : ''}
+            <span class="uputa">Točno prepiši dio rečenice</span>
+
+            ${indeks > 0 ? `<button type="button" class="opasni-gumb" data-indeks="${indeks}">Ukloni varijablu</button>` : ""}
         `;
 
-        kontejnerVarijabli.appendChild(varijablaDiv);
+        kontejnerVarijabli.appendChild(div);
     });
 
     document.querySelectorAll('[data-tip="simbol"]').forEach(input => {
-        input.addEventListener('input', azurirajVarijablu);
+        input.addEventListener("input", azurirajVarijablu);
     });
 
     document.querySelectorAll('[data-tip="iskaz"]').forEach(input => {
-        input.addEventListener('input', azurirajVarijablu);
+        input.addEventListener("input", azurirajVarijablu);
     });
 
-    document.querySelectorAll('.opasni-gumb').forEach(gumb => {
-        gumb.addEventListener('click', function () {
-            const indeks = parseInt(this.getAttribute('data-indeks'));
-            ukloniVarijablu(indeks);
+    document.querySelectorAll(".opasni-gumb").forEach(gumb => {
+        gumb.addEventListener("click", function () {
+            ukloniVarijablu(parseInt(this.dataset.indeks, 10));
         });
     });
 }
 
 function azurirajVarijablu(e) {
-    const indeks = parseInt(e.target.dataset.indeks);
+    const indeks = parseInt(e.target.dataset.indeks, 10);
     const tip = e.target.dataset.tip;
-    const vrijednost = e.target.value;
 
-    if (tip === 'simbol') {
-        const cistaVrijednost = vrijednost.replace(/[^A-Za-z]/g, '').toUpperCase();
-        varijable[indeks].simbol = cistaVrijednost;
-        e.target.value = cistaVrijednost;
+    if (tip === "simbol") {
+        let vrijednost = e.target.value.replace(/[^A-Za-z]/g, "").toUpperCase().slice(0, 1);
+        if (!vrijednost) vrijednost = varijable[indeks].simbol || "A";
+        varijable[indeks].simbol = vrijednost;
+        e.target.value = vrijednost;
     } else {
-        varijable[indeks].iskaz = vrijednost;
+        varijable[indeks].iskaz = e.target.value;
     }
 }
 
 function ukloniVarijablu(indeks) {
-    if (varijable.length > 1) {
-        varijable.splice(indeks, 1);
-        prikaziVarijable();
-    } else {
-        alert("Morate imati barem jednu varijablu!");
+    if (varijable.length <= 1) {
+        alert("Morate imati barem jednu varijablu.");
+        return;
     }
+
+    varijable.splice(indeks, 1);
+    prikaziVarijable();
 }
 
 function dodajVarijablu() {
+    if (varijable.length >= 3) {
+        alert("Možete unijeti najviše 3 varijable.");
+        return;
+    }
+
     const koristenaSlova = varijable.map(v => v.simbol);
-    let sljedeceSlovo = 'A';
+    let sljedeceSlovo = "A";
 
     for (let i = 65; i <= 90; i++) {
         const slovo = String.fromCharCode(i);
@@ -119,237 +117,185 @@ function dodajVarijablu() {
 
     varijable.push({
         simbol: sljedeceSlovo,
-        iskaz: ''
+        iskaz: ""
     });
 
     prikaziVarijable();
 
     const zadnjiIndeks = varijable.length - 1;
-    const zadnjiInput = document.getElementById(`iskaz${zadnjiIndeks}`);
-    if (zadnjiInput) {
-        setTimeout(() => {
-            zadnjiInput.focus();
-        }, 100);
-    }
-}
-
-function parsirajRecenicu() {
-    if (!unosRecenice || !izlaz) return;
-
-    const recenica = unosRecenice.value.trim();
-
-    if (!recenica) {
-        izlaz.innerHTML = `<span style="color: #e74c3c;">Molimo unesite rečenicu za analizu.</span>`;
-        return;
-    }
-
-    if (varijable.length === 0) {
-        izlaz.innerHTML = `<span style="color: #e74c3c;">Molimo definirajte barem jednu varijablu.</span>`;
-        return;
-    }
-
-    try {
-        let rezultat = recenica;
-
-        rezultat = zamijeniIskaze(rezultat);
-        rezultat = obradiNegaciju(rezultat);
-        rezultat = obradiPosebneSlucajeve(rezultat);
-        rezultat = zamijeniLogickeVeznike(rezultat);
-        rezultat = dodajZagrade(rezultat);
-        rezultat = ocistiFormat(rezultat);
-
-        izlaz.innerHTML = `<strong>Originalna rečenica:</strong>\n${recenica}\n\n<strong>Logički izraz:</strong>\n<span class="simbol">${rezultat}</span>`;
-
-    } catch (pogreska) {
-        izlaz.innerHTML = `<span style="color: #e74c3c;">Došlo je do greške pri parsiranju.</span>`;
-    }
-}
-
-function escapeRegExp(string) {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const input = document.getElementById(`iskaz${zadnjiIndeks}`);
+    if (input) setTimeout(() => input.focus(), 50);
 }
 
 function napraviFleksibilniRegexZaIskaz(iskaz) {
-    const rijeci = iskaz.trim().split(/\s+/).map(escapeRegExp);
-    const pattern = rijeci.join('\\s+');
-    return new RegExp(pattern, 'gi');
+    const rijeci = normalizirajTekst(iskaz).split(/\s+/).map(escapeRegExp);
+    return new RegExp(rijeci.join("\\s+"), "gi");
 }
 
 function zamijeniIskaze(tekst) {
     let rezultat = tekst;
 
-    const sortiraneVarijable = [...varijable].sort((a, b) => (b.iskaz || '').length - (a.iskaz || '').length);
+    const sortiraneVarijable = [...varijable]
+        .filter(v => v.iskaz && v.iskaz.trim())
+        .sort((a, b) => b.iskaz.trim().length - a.iskaz.trim().length);
 
-    sortiraneVarijable.forEach(varijabla => {
-        if (varijabla.iskaz && varijabla.iskaz.trim()) {
-            const cistiIskaz = varijabla.iskaz.trim();
-            const bezRazmaka = cistiIskaz.replace(/\s+/g, '');
-
-            const regexFleks = napraviFleksibilniRegexZaIskaz(cistiIskaz);
-            rezultat = rezultat.replace(regexFleks, varijabla.simbol);
-
-            const regexBezRazmaka = new RegExp(escapeRegExp(bezRazmaka), 'gi');
-            rezultat = rezultat.replace(regexBezRazmaka, varijabla.simbol);
-        }
+    sortiraneVarijable.forEach(v => {
+        const regex = napraviFleksibilniRegexZaIskaz(v.iskaz);
+        rezultat = rezultat.replace(regex, v.simbol);
     });
 
     return rezultat;
 }
 
-function obradiNegaciju(tekst) {
+function obradiFrazeNegacije(tekst) {
     let rezultat = tekst;
 
+    rezultat = rezultat.replace(/\bnije\s+slučaj\s+da\s+(.+)$/i, (m, p1) => `¬(${p1.trim()})`);
+    rezultat = rezultat.replace(/\bne\s+vrijedi\s+da\s+(.+)$/i, (m, p1) => `¬(${p1.trim()})`);
+    rezultat = rezultat.replace(/\bnije\s+tako\s+da\s+(.+)$/i, (m, p1) => `¬(${p1.trim()})`);
 
-    rezultat = rezultat.replace(/\bnije\s+slučaj\s+da\s+/gi, '¬');
-    rezultat = rezultat.replace(/\bne\s+vrijedi\s+da\s+/gi, '¬');
-    rezultat = rezultat.replace(/\bnije\s+tako\s+da\s+/gi, '¬');
+    return rezultat;
+}
 
+function obradiNiNitiKonstrukcije(tekst) {
+    let rezultat = tekst;
+    const atom = "(?:¬?[A-Z]|\\([^()]+\\))";
 
-    rezultat = rezultat.replace(/\bne\s*ću\s*([A-Z(¬])/gi, '¬$1');
-    rezultat = rezultat.replace(/\bneću\s*([A-Z(¬])/gi, '¬$1');
-    rezultat = rezultat.replace(/\bneće\s*([A-Z(¬])/gi, '¬$1');
-    rezultat = rezultat.replace(/\bnece\s*([A-Z(¬])/gi, '¬$1');
+    rezultat = rezultat.replace(new RegExp(`\\bniti\\s+(${atom})\\s+niti\\s+(${atom})\\b`, "gi"), "(¬$1 ∧ ¬$2)");
+    rezultat = rezultat.replace(new RegExp(`\\bni\\s+(${atom})\\s+ni\\s+(${atom})\\b`, "gi"), "(¬$1 ∧ ¬$2)");
+    rezultat = rezultat.replace(new RegExp(`\\bniti\\s+(${atom})\\s+ni\\s+(${atom})\\b`, "gi"), "(¬$1 ∧ ¬$2)");
+    rezultat = rezultat.replace(new RegExp(`\\bni\\s+(${atom})\\s+niti\\s+(${atom})\\b`, "gi"), "(¬$1 ∧ ¬$2)");
 
-    rezultat = rezultat.replace(/\bnisam\s+([A-Z(¬])/gi, '¬$1');
-    rezultat = rezultat.replace(/\bnisi\s+([A-Z(¬])/gi, '¬$1');
-    rezultat = rezultat.replace(/\bnije\s+([A-Z(¬])/gi, '¬$1');
-    rezultat = rezultat.replace(/\bnismo\s+([A-Z(¬])/gi, '¬$1');
-    rezultat = rezultat.replace(/\bniste\s+([A-Z(¬])/gi, '¬$1');
-    rezultat = rezultat.replace(/\bnisu\s+([A-Z(¬])/gi, '¬$1');
+    return rezultat;
+}
 
+function obradiObicnuNegaciju(tekst) {
+    let rezultat = tekst;
+    const atom = "(?:\\([^()]+\\)|[A-Z])";
+
+    rezultat = rezultat.replace(new RegExp(`\\bne\\s*ću\\s*(${atom})`, "gi"), "¬$1");
+    rezultat = rezultat.replace(new RegExp(`\\bneću\\s*(${atom})`, "gi"), "¬$1");
+    rezultat = rezultat.replace(new RegExp(`\\bneće\\s*(${atom})`, "gi"), "¬$1");
+    rezultat = rezultat.replace(new RegExp(`\\bnece\\s*(${atom})`, "gi"), "¬$1");
+
+    rezultat = rezultat.replace(new RegExp(`\\bnisam\\s+(${atom})`, "gi"), "¬$1");
+    rezultat = rezultat.replace(new RegExp(`\\bnisi\\s+(${atom})`, "gi"), "¬$1");
+    rezultat = rezultat.replace(new RegExp(`\\bnije\\s+(${atom})`, "gi"), "¬$1");
+    rezultat = rezultat.replace(new RegExp(`\\bnismo\\s+(${atom})`, "gi"), "¬$1");
+    rezultat = rezultat.replace(new RegExp(`\\bniste\\s+(${atom})`, "gi"), "¬$1");
+    rezultat = rezultat.replace(new RegExp(`\\bnisu\\s+(${atom})`, "gi"), "¬$1");
+
+    rezultat = rezultat.replace(new RegExp(`\\bne\\s+(${atom})`, "gi"), "¬$1");
+
+    rezultat = rezultat.replace(/¬¬([A-Z])/g, "$1");
+    rezultat = rezultat.replace(/¬¬\(/g, "(");
 
     return rezultat;
 }
 
 function obradiPosebneSlucajeve(tekst) {
     let rezultat = tekst;
+    const atom = "(?:¬?[A-Z]|\\([^()]+\\))";
 
-    const biloBiloRegex = /bilo\s+([A-Z¬(][^,.]*?)\s+bilo\s+([A-Z¬(][^,.]*?)(?=[,.]|$)/gi;
-    rezultat = rezultat.replace(biloBiloRegex, '($1 ∨ $2)');
+    rezultat = rezultat.replace(new RegExp(`\\bbilo\\s+(${atom})\\s+bilo\\s+(${atom})\\b`, "gi"), "($1 ∨ $2)");
+    rezultat = rezultat.replace(new RegExp(`\\b(${atom})\\s+ako i samo ako\\s+(${atom})\\b`, "gi"), "($1 ↔ $2)");
+    rezultat = rezultat.replace(new RegExp(`\\b(${atom})\\s+samo ako\\s+(${atom})\\b`, "gi"), "($1 → $2)");
+    rezultat = rezultat.replace(new RegExp(`^samo ako\\s+(${atom})\\s+(${atom})$`, "i"), "($2 → $1)");
+    rezultat = rezultat.replace(new RegExp(`^ako\\s+(${atom})\\s+onda\\s+(${atom})$`, "i"), "($1 → $2)");
 
-    const akoSamoAkoSredina = /(\([^()]+\)|¬?[A-Z])\s*ako i samo ako\s*(\([^()]+\)|¬?[A-Z])/gi;
-    rezultat = rezultat.replace(akoSamoAkoSredina, '($1 ↔ $2)');
-
-    const akoSamoAkoPocetak = /^ako i samo ako\s+([A-Z¬])\s+([A-Z¬])/gi;
-    rezultat = rezultat.replace(akoSamoAkoPocetak, '($1 ↔ $2)');
-
-    const samoAkoSredina = /([A-Z¬])\s+samo ako\s+([A-Z¬])/gi;
-    rezultat = rezultat.replace(samoAkoSredina, '($1 → $2)');
-
-    const samoAkoPocetak = /^samo ako\s+([A-Z¬])\s+([A-Z¬])/gi;
-    rezultat = rezultat.replace(samoAkoPocetak, '($2 → $1)');
-
-    const akoOndaPocetak = /^ako\s+([A-Z¬(][^,.]*?)\s+onda\s+([A-Z¬(][^,.]*?)(?=[,.]|$)/gi;
-    rezultat = rezultat.replace(akoOndaPocetak, '($1 → $2)');
-
-    const akoOndaSredina = /ako\s+([^,.]+?)\s+onda\s+([^,.]+?)(?=[,.]|$)/gi;
-    rezultat = rezultat.replace(akoOndaSredina, (match, p1, p2) => {
-        return `(${p1.trim()} → ${p2.trim()})`;
-    });
-
-    const uSlucajuDaPocetak = /^u slučaju da\s+([^,.]+?)\s+([^,.]+?)(?=[,.]|$)/gi;
-    rezultat = rezultat.replace(uSlucajuDaPocetak, (match, p1, p2) => {
-        return `(${p1.trim()} → ${p2.trim()})`;
-    });
-
-    const uSlucajuDaSredina = /u slučaju da\s+([^,.]+?)\s+([^,.]+?)(?=[,.]|$)/gi;
-    rezultat = rezultat.replace(uSlucajuDaSredina, (match, p1, p2) => {
-        return `(${p1.trim()} → ${p2.trim()})`;
-    });
-
-    const buduciDaPocetak = /^budući da\s+([^,.]+?)\s+([^,.]+?)(?=[,.]|$)/gi;
-    rezultat = rezultat.replace(buduciDaPocetak, (match, p1, p2) => {
-        return `(${p1.trim()} → ${p2.trim()})`;
-    });
-
-    const buduciDaSredina = /budući da\s+([^,.]+?)\s+([^,.]+?)(?=[,.]|$)/gi;
-    rezultat = rezultat.replace(buduciDaSredina, (match, p1, p2) => {
-        return `(${p1.trim()} → ${p2.trim()})`;
-    });
-    const podPretpostavkomDaPocetak = /^pod pretpostavkom da\s+([^,.]+?)\s+([^,.]+?)(?=[,.]|$)/gi;
-    rezultat = rezultat.replace(podPretpostavkomDaPocetak, (match, p1, p2) => {
-        return `(${p1.trim()} → ${p2.trim()})`;
-    });
-
-    const podPretpostavkomDaSredina = /pod pretpostavkom da\s+([^,.]+?)\s+([^,.]+?)(?=[,.]|$)/gi;
-    rezultat = rezultat.replace(podPretpostavkomDaSredina, (match, p1, p2) => {
-        return `(${p1.trim()} → ${p2.trim()})`;
-    });
+    rezultat = rezultat.replace(new RegExp(`^budući da\\s+(${atom})\\s+(${atom})$`, "i"), "($1 → $2)");
+    rezultat = rezultat.replace(new RegExp(`^buduci da\\s+(${atom})\\s+(${atom})$`, "i"), "($1 → $2)");
+    rezultat = rezultat.replace(new RegExp(`^pod pretpostavkom da\\s+(${atom})\\s+(${atom})$`, "i"), "($1 → $2)");
+    rezultat = rezultat.replace(new RegExp(`^u slučaju da\\s+(${atom})\\s+(${atom})$`, "i"), "($1 → $2)");
+    rezultat = rezultat.replace(new RegExp(`^u slucaju da\\s+(${atom})\\s+(${atom})$`, "i"), "($1 → $2)");
 
     return rezultat;
+}
+
+function zamijeniMaluRijec(tekst, rijec, zamjena) {
+    const regex = new RegExp(`(^|[\\s(])${escapeRegExp(rijec)}(?=[\\s),.;!?]|$)`, "g");
+    return tekst.replace(regex, (match, p1) => `${p1}${zamjena}`);
 }
 
 function zamijeniLogickeVeznike(tekst) {
     let rezultat = tekst;
 
-    Object.values(logickiVeznici).forEach(veznik => {
-        veznik.rijeci.forEach(rijec => {
-            const posebniVeznici = ["samo ako", "ako i samo ako", "bilo", "ako", "onda",
-                "u slučaju da", "budući da", "pod pretpostavkom da"];
-
-            if (!posebniVeznici.includes(rijec)) {
-                const regex = new RegExp(`\\b${escapeRegExp(rijec)}\\b`, 'gi');
-                rezultat = rezultat.replace(regex, function (match) {
-                    const varijableSimboli = varijable.map(v => v.simbol);
-                    if (varijableSimboli.includes(match.toUpperCase())) {
-                        return match;
-                    }
-                    return veznik.simbol;
-                });
-            }
-        });
-    });
+    rezultat = zamijeniMaluRijec(rezultat, "i", "∧");
+    rezultat = zamijeniMaluRijec(rezultat, "pa", "∧");
+    rezultat = zamijeniMaluRijec(rezultat, "te", "∧");
+    rezultat = zamijeniMaluRijec(rezultat, "a", "∧");
+    rezultat = zamijeniMaluRijec(rezultat, "ali", "∧");
+    rezultat = zamijeniMaluRijec(rezultat, "nego", "∧");
+    rezultat = zamijeniMaluRijec(rezultat, "no", "∧");
+    rezultat = zamijeniMaluRijec(rezultat, "već", "∧");
+    rezultat = zamijeniMaluRijec(rezultat, "mada", "∧");
+    rezultat = zamijeniMaluRijec(rezultat, "premda", "∧");
+    rezultat = zamijeniMaluRijec(rezultat, "iako", "∧");
+    rezultat = zamijeniMaluRijec(rezultat, "ili", "∨");
 
     return rezultat;
 }
 
 function tokenizirajIzraz(tekst) {
-    const t = tekst
-        .replace(/([()∧∨→↔])/g, ' $1 ')
-        .replace(/¬\s+/g, '¬')
-        .replace(/\s+/g, ' ')
-        .trim();
-
-    const sirovi = t.split(' ').filter(Boolean);
     const tokeni = [];
+    let i = 0;
 
-    for (let i = 0; i < sirovi.length; i++) {
-        const s = sirovi[i];
+    while (i < tekst.length) {
+        const c = tekst[i];
 
-        if (s === '¬') {
-            tokeni.push({ tip: 'NOT', v: '¬' });
-        } else if (s === '∧' || s === '∨' || s === '→' || s === '↔') {
-            tokeni.push({ tip: 'OP', v: s });
-        } else if (s === '(') {
-            tokeni.push({ tip: 'LP', v: s });
-        } else if (s === ')') {
-            tokeni.push({ tip: 'RP', v: s });
-        } else if (/^[A-Z]$/.test(s)) {
-            tokeni.push({ tip: 'VAR', v: s });
-        } else if (/^¬[A-Z]$/.test(s)) {
-            tokeni.push({ tip: 'NOT', v: '¬' });
-            tokeni.push({ tip: 'VAR', v: s.slice(1) });
-        } else {
-            tokeni.push({ tip: 'TXT', v: s });
+        if (/\s/.test(c)) {
+            i++;
+            continue;
         }
+
+        if (c === "¬") {
+            tokeni.push({ tip: "NOT", v: "¬" });
+            i++;
+            continue;
+        }
+
+        if (["∧", "∨", "→", "↔"].includes(c)) {
+            tokeni.push({ tip: "OP", v: c });
+            i++;
+            continue;
+        }
+
+        if (c === "(") {
+            tokeni.push({ tip: "LP", v: "(" });
+            i++;
+            continue;
+        }
+
+        if (c === ")") {
+            tokeni.push({ tip: "RP", v: ")" });
+            i++;
+            continue;
+        }
+
+        if (/[A-Z]/.test(c)) {
+            tokeni.push({ tip: "VAR", v: c });
+            i++;
+            continue;
+        }
+
+        return [];
     }
 
     return tokeni;
 }
 
 function prioritet(op) {
-    if (op === '¬') return 5;
-    if (op === '∧') return 4;
-    if (op === '∨') return 3;
-    if (op === '→') return 2;
-    if (op === '↔') return 1;
+    if (op === "¬") return 5;
+    if (op === "∧") return 4;
+    if (op === "∨") return 3;
+    if (op === "→") return 2;
+    if (op === "↔") return 1;
     return 0;
 }
 
 function asocijativnost(op) {
-    if (op === '¬') return 'R';
-    if (op === '→') return 'R';
-    return 'L';
+    if (op === "¬" || op === "→") return "R";
+    return "L";
 }
 
 function napraviASTizTokena(tokeni) {
@@ -359,17 +305,14 @@ function napraviASTizTokena(tokeni) {
     function pushOp(opToken) {
         while (ops.length) {
             const top = ops[ops.length - 1];
-            if (top.tip !== 'OP' && top.tip !== 'NOT') break;
+            if (top.tip !== "OP" && top.tip !== "NOT") break;
 
-            const topOp = top.v;
-            const curOp = opToken.v;
-
-            const pTop = prioritet(topOp);
-            const pCur = prioritet(curOp);
+            const pTop = prioritet(top.v);
+            const pCur = prioritet(opToken.v);
 
             if (
-                (asocijativnost(curOp) === 'L' && pCur <= pTop) ||
-                (asocijativnost(curOp) === 'R' && pCur < pTop)
+                (asocijativnost(opToken.v) === "L" && pCur <= pTop) ||
+                (asocijativnost(opToken.v) === "R" && pCur < pTop)
             ) {
                 output.push(ops.pop());
             } else {
@@ -379,150 +322,134 @@ function napraviASTizTokena(tokeni) {
         ops.push(opToken);
     }
 
-    for (let i = 0; i < tokeni.length; i++) {
-        const tok = tokeni[i];
-
-        if (tok.tip === 'VAR') {
+    for (const tok of tokeni) {
+        if (tok.tip === "VAR") {
             output.push(tok);
-        } else if (tok.tip === 'NOT') {
-            pushOp({ tip: 'NOT', v: '¬' });
-        } else if (tok.tip === 'OP') {
+        } else if (tok.tip === "NOT") {
+            pushOp({ tip: "NOT", v: "¬" });
+        } else if (tok.tip === "OP") {
             pushOp(tok);
-        } else if (tok.tip === 'LP') {
+        } else if (tok.tip === "LP") {
             ops.push(tok);
-        } else if (tok.tip === 'RP') {
-            while (ops.length && ops[ops.length - 1].tip !== 'LP') {
+        } else if (tok.tip === "RP") {
+            while (ops.length && ops[ops.length - 1].tip !== "LP") {
                 output.push(ops.pop());
             }
-            if (ops.length && ops[ops.length - 1].tip === 'LP') ops.pop();
-        } else {
-
+            if (ops.length && ops[ops.length - 1].tip === "LP") {
+                ops.pop();
+            }
         }
     }
 
     while (ops.length) {
         const op = ops.pop();
-        if (op.tip !== 'LP') output.push(op);
+        if (op.tip !== "LP") output.push(op);
     }
 
     const stack = [];
 
     for (const tok of output) {
-        if (tok.tip === 'VAR') {
-            stack.push({ tip: 'VAR', v: tok.v });
-        } else if (tok.tip === 'NOT') {
+        if (tok.tip === "VAR") {
+            stack.push({ tip: "VAR", v: tok.v });
+        } else if (tok.tip === "NOT") {
             const a = stack.pop();
             if (!a) throw new Error("Pogrešna negacija");
-            stack.push({ tip: 'NOT', a });
-        } else if (tok.tip === 'OP') {
+            stack.push({ tip: "NOT", a });
+        } else if (tok.tip === "OP") {
             const b = stack.pop();
             const a = stack.pop();
             if (!a || !b) throw new Error("Pogrešan operator");
-            stack.push({ tip: 'BIN', op: tok.v, a, b });
+            stack.push({ tip: "BIN", op: tok.v, a, b });
         }
     }
 
-    if (stack.length !== 1) throw new Error("Neispravan izraz");
+    if (stack.length !== 1) {
+        throw new Error("Neispravan izraz");
+    }
+
     return stack[0];
 }
 
 function ispisiAST(ast) {
-    if (ast.tip === 'VAR') return ast.v;
-    if (ast.tip === 'NOT') {
+    if (ast.tip === "VAR") return ast.v;
+
+    if (ast.tip === "NOT") {
         const unutra = ispisiAST(ast.a);
-        if (ast.a.tip === 'BIN') return `¬(${unutra})`;
+        if (ast.a.tip === "BIN") return `¬(${unutra})`;
         return `¬${unutra}`;
     }
-    if (ast.tip === 'BIN') {
-        const lijevo = ispisiAST(ast.a);
-        const desno = ispisiAST(ast.b);
-        return `(${lijevo} ${ast.op} ${desno})`;
+
+    if (ast.tip === "BIN") {
+        return `(${ispisiAST(ast.a)} ${ast.op} ${ispisiAST(ast.b)})`;
     }
-    return '';
+
+    return "";
 }
 
 function dodajZagrade(tekst) {
-    let rezultat = tekst;
-
-    rezultat = rezultat.replace(/¬\s+/g, '¬');
-
     try {
-        const tokeni = tokenizirajIzraz(rezultat).filter(t => t.tip !== 'TXT');
-        if (tokeni.length === 0) return rezultat;
-
+        const tokeni = tokenizirajIzraz(tekst);
+        if (!tokeni.length) return tekst;
         const ast = napraviASTizTokena(tokeni);
-        rezultat = ispisiAST(ast);
-
-        rezultat = rezultat.replace(/\(\(([^()]+)\)\)/g, '($1)');
-
-        return rezultat;
-    } catch (e) {
-        const izraziBezZagrada = rezultat.match(/([A-Z¬][^()]+?)(?=[,.]|$)/g);
-
-        if (izraziBezZagrada) {
-            izraziBezZagrada.forEach(izraz => {
-                const cistiIzraz = izraz.trim();
-
-                if ((cistiIzraz.includes('→') ||
-                    cistiIzraz.includes('∧') ||
-                    cistiIzraz.includes('∨') ||
-                    cistiIzraz.includes('↔')) &&
-                    !cistiIzraz.includes('(') && !cistiIzraz.includes(')')) {
-
-                    rezultat = rezultat.replace(cistiIzraz, `(${cistiIzraz})`);
-                }
-            });
-        }
-
-        rezultat = rezultat.replace(/¬\s+/g, '¬');
-        rezultat = rezultat.replace(/\(\(([^)]+)\)\)/g, '($1)');
-        rezultat = rezultat.replace(/\(¬\)([A-Z])/g, '¬$1');
-
-        return rezultat;
+        return ispisiAST(ast);
+    } catch {
+        return tekst;
     }
 }
 
 function ocistiFormat(tekst) {
-    let rezultat = tekst;
+    return tekst
+        .replace(/[.,;!?]+$/g, "")
+        .replace(/([∧∨→↔])/g, " $1 ")
+        .replace(/¬\s+/g, "¬")
+        .replace(/\s+/g, " ")
+        .replace(/\s*\(\s*/g, "(")
+        .replace(/\s*\)\s*/g, ")")
+        .replace(/\(\((.+?)\)\)/g, "($1)")
+        .trim();
+}
 
-    rezultat = rezultat.replace(/[.,;!?]$/, '');
-    rezultat = rezultat.replace(/([∧∨→↔])/g, ' $1 ');
-    rezultat = rezultat.replace(/¬\s+/g, '¬');
-    rezultat = rezultat.replace(/\s+/g, ' ');
-    rezultat = rezultat.replace(/\s*\(\s*/g, '(');
-    rezultat = rezultat.replace(/\s*\)\s*/g, ')');
-    rezultat = rezultat.replace(/\(([A-Z])\s+↔\s+¬\)\s*([A-Z])/g, '($1 ↔ ¬$2)');
+function parsirajRecenicu() {
+    const recenica = normalizirajTekst(unosRecenice.value).replace(/[.!?]+$/, "");
 
-    const varijableSimboli = varijable.map(v => v.simbol);
-    const preostaleRijeci = [
-        "ako", "samo", "onda", "i", "da", "a",
-        "neću", "nece", "neće", "ne",
-        "nisam", "nisi", "nije", "nismo", "niste", "nisu"
-    ];
+    if (!recenica) {
+        izlaz.innerHTML = `<span style="color:#e74c3c;">Molimo unesite rečenicu za analizu.</span>`;
+        return;
+    }
 
-    preostaleRijeci.forEach(rijec => {
-        if (!varijableSimboli.includes(rijec.toUpperCase())) {
-            const regex = new RegExp(`\\s*\\b${escapeRegExp(rijec)}\\b\\s*`, 'gi');
-            rezultat = rezultat.replace(regex, ' ');
-        }
-    });
+    if (!varijable.some(v => v.iskaz.trim() !== "")) {
+        izlaz.innerHTML = `<span style="color:#e74c3c;">Molimo unesite barem jednu varijablu.</span>`;
+        return;
+    }
 
-    rezultat = rezultat.replace(/\(\((.+?)\)\)/g, '($1)');
+    try {
+        let rezultat = recenica;
 
-    return rezultat.replace(/\s+/g, ' ').trim();
+        rezultat = zamijeniIskaze(rezultat);
+        rezultat = obradiFrazeNegacije(rezultat);
+        rezultat = obradiNiNitiKonstrukcije(rezultat);
+        rezultat = obradiObicnuNegaciju(rezultat);
+        rezultat = obradiPosebneSlucajeve(rezultat);
+        rezultat = zamijeniLogickeVeznike(rezultat);
+        rezultat = ocistiFormat(rezultat);
+        rezultat = dodajZagrade(rezultat);
+        rezultat = ocistiFormat(rezultat);
+
+        izlaz.innerHTML = `<strong>Originalna rečenica:</strong>
+${recenica}
+
+<strong>Logički izraz:</strong>
+<span class="simbol">${rezultat}</span>`;
+    } catch (e) {
+        izlaz.innerHTML = `<span style="color:#e74c3c;">Došlo je do greške pri parsiranju.</span>`;
+    }
 }
 
 function resetirajFormu() {
-    if (unosRecenice) {
-        unosRecenice.value = '';
-    }
-
+    if (unosRecenice) unosRecenice.value = "";
     varijable = [];
     dodajVarijablu();
-
-    if (izlaz) {
-        izlaz.textContent = 'Ovdje će se prikazati logički izraz...';
-    }
+    if (izlaz) izlaz.textContent = "Ovdje će se prikazati logički izraz...";
 }
 
-document.addEventListener('DOMContentLoaded', pokreniAplikaciju);
+document.addEventListener("DOMContentLoaded", pokreniAplikaciju);
